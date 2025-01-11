@@ -10,7 +10,7 @@ Servo servo2;
 Servo servo3;
 Servo servo4;
 
-// neutral position for servos; test this -- maybe 0? maybe 90? do we want default to be standing up or to the side?
+// neutral position for servos; test this -- maybe 0? maybe 90? do we want default to be standing up or to the side? or stay at the last moved place?
 // int neutralpos;
 int neutralpos = 90; // probably need different neutral position for different servos (do!)
 
@@ -160,7 +160,26 @@ void processGamepad(ControllerPtr gamepad) {
   
   if (abs(leftY) > joyZone) {
     Serial.print("Left joystick moved: ");
-    servo3goal = map(leftY, -512, 512, 0, 180);
+    servo4goal = map(leftY, -512, 512, 0, 180);
+  } else {
+    servo4goal = neutralpos;
+  }
+
+  if (abs(servo4value - servo4goal) > error) {
+    // increment servo write by like 5 and then delay a millisecond
+    if (servo4value < servo4goal) {
+      servo4.write(servo4value + 5);
+      delay(10);
+    };
+    if (servo4value > servo4goal) {
+      servo4.write(servo4value - 5);
+      delay(10);
+    };
+  };
+
+  if (abs(rightX) > joyZone) {
+    Serial.print("Right joystick moved: ");
+    servo3goal = map(rightX, -512, 512, 0, 180);
   } else {
     servo3goal = neutralpos;
   }
@@ -177,9 +196,9 @@ void processGamepad(ControllerPtr gamepad) {
     };
   };
 
-  if (abs(rightX) > joyZone) {
+  if (abs(rightY) > joyZone) {
     Serial.print("Right joystick moved: ");
-    servo2goal = map(rightX, -512, 512, 0, 180);
+    servo2goal = map(rightY, -512, 512, 0, 180);
   } else {
     servo2goal = neutralpos;
   }
@@ -192,25 +211,6 @@ void processGamepad(ControllerPtr gamepad) {
     };
     if (servo2value > servo2goal) {
       servo2.write(servo2value - 5);
-      delay(10);
-    };
-  };
-
-  if (abs(rightY) > joyZone) {
-    Serial.print("Right joystick moved: ");
-    servo4goal = map(rightY, -512, 512, 0, 180);
-  } else {
-    servo4goal = neutralpos;
-  }
-
-  if (abs(servo4value - servo4goal) > error) {
-    // increment servo write by like 5 and then delay a millisecond
-    if (servo4value < servo4goal) {
-      servo4.write(servo4value + 5);
-      delay(10);
-    };
-    if (servo4value > servo4goal) {
-      servo4.write(servo4value - 5);
       delay(10);
     };
   };
@@ -299,3 +299,7 @@ void loop() {
 // put things to control top one on right joystick, put bottom on left joystick
 // step values? too jerky/sudden right now, make motion smoother --> set servo map as goal, have servo turn slowly towards goal with error and get slower as the error decreases (like PID)
 // neutral pos / straight pos / string tensions
+
+// make one joystick move bottom part, other joystick move top part (make them the same direction for both)
+// Servo 1 and the servo CCW to it (to the right of it, servo 4) is bottom part (left joystick)
+// make all four strings move together (add weights/tensions) for each direction to make it smoother
