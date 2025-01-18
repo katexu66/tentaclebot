@@ -122,29 +122,28 @@ void onDisconnectedController(ControllerPtr ctl) {
 void processGamepad(ControllerPtr gamepad) {
 
   // variables for servo control using controllers
-  const int joyZone = 16; // define dead zone range for joystick (not sensing anything); maybe create zones for each l/r x/y
   int leftX = gamepad->axisX();
   int leftY = gamepad->axisY();
   int rightX = gamepad->axisRX();
   int rightY = gamepad->axisRY();
+
   int error = 5;
+  int joyZone = 10; // can remove later?
+
   int servo1value = servo1.read(); 
   int servo2value = servo2.read();
   int servo3value = servo3.read();
   int servo4value = servo4.read();
-  int servo1goal = neutralpos;
+
+  int servo1goal = map(leftX, -512, 512, 0, 180); // servo1goal;
   int servo2goal = neutralpos;
   int servo3goal = neutralpos;
   int servo4goal = neutralpos;
 
   // use left and right joysticks to control servos
-
-  if (abs(leftX) > joyZone) {
-    Serial.print("Left joystick moved: ");
-    servo1goal = map(leftX, -512, 512, 0, 180);
-  } else {
-    servo1goal = neutralpos;
-  }
+  // if (abs(leftX) > joyZone) {
+  //   int servo1goal = map(leftX, -512, 512, 0, 180);
+  // }
 
   if (abs(servo1value - servo1goal) > error) {
     // increment servo write by small amount and then delay a small amount
@@ -156,7 +155,7 @@ void processGamepad(ControllerPtr gamepad) {
       servo1.write(servo1value - 3);
       delay(80);
     };
-  };
+  }
   
   if (abs(leftY) > joyZone) {
     Serial.print("Left joystick moved: ");
@@ -179,26 +178,7 @@ void processGamepad(ControllerPtr gamepad) {
 
   if (abs(rightX) > joyZone) {
     Serial.print("Right joystick moved: ");
-    servo3goal = map(rightX, -512, 512, 0, 180);
-  } else {
-    servo3goal = neutralpos;
-  }
-
-  if (abs(servo3value - servo3goal) > error) {
-    // increment servo write by like 5 and then delay a millisecond
-    if (servo3value < servo3goal) {
-      servo3.write(servo3value + 5);
-      delay(10);
-    };
-    if (servo3value > servo3goal) {
-      servo3.write(servo3value - 5);
-      delay(10);
-    };
-  };
-
-  if (abs(rightY) > joyZone) {
-    Serial.print("Right joystick moved: ");
-    servo2goal = map(rightY, -512, 512, 0, 180);
+    servo2goal = map(rightX, -512, 512, 0, 180);
   } else {
     servo2goal = neutralpos;
   }
@@ -211,6 +191,25 @@ void processGamepad(ControllerPtr gamepad) {
     };
     if (servo2value > servo2goal) {
       servo2.write(servo2value - 5);
+      delay(10);
+    };
+  };
+
+  if (abs(rightY) > joyZone) {
+    Serial.print("Right joystick moved: ");
+    servo3goal = map(rightY, -512, 512, 0, 180);
+  } else {
+    servo3goal = neutralpos;
+  }
+
+  if (abs(servo3value - servo3goal) > error) {
+    // increment servo write by like 5 and then delay a millisecond
+    if (servo3value < servo3goal) {
+      servo3.write(servo3value + 5);
+      delay(10);
+    };
+    if (servo3value > servo3goal) {
+      servo3.write(servo3value - 5);
       delay(10);
     };
   };
