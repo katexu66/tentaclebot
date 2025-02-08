@@ -127,90 +127,65 @@ void processGamepad(ControllerPtr gamepad) {
   int rightX = gamepad->axisRX();
   int rightY = gamepad->axisRY();
 
-  int error = 5;
-  int joyZone = 10; // can remove later?
+  int error = 10;
 
   int servo1value = servo1.read(); 
   int servo2value = servo2.read();
   int servo3value = servo3.read();
   int servo4value = servo4.read();
 
-  int servo1goal = map(leftX, -512, 512, 0, 180); // servo1goal;
-  int servo2goal = neutralpos;
-  int servo3goal = neutralpos;
-  int servo4goal = neutralpos;
+  int servo1goal = map(rightX, -512, 512, 0, 180);
+  int servo2goal = map(leftX, -512, 512, 0, 180);
+  int servo3goal = map(leftY, -512, 512, 0, 180);
+  int servo4goal = map(rightY, -512, 512, 0, 180);
 
   // use left and right joysticks to control servos
-  // if (abs(leftX) > joyZone) {
-  //   int servo1goal = map(leftX, -512, 512, 0, 180);
-  // }
 
   if (abs(servo1value - servo1goal) > error) {
     // increment servo write by small amount and then delay a small amount
     if (servo1value < servo1goal) {
-      servo1.write(servo1value + 3);
-      delay(80);
+      servo1.write(servo1value + 5);
+      delay(30);
     };
     if (servo1value > servo1goal) {
-      servo1.write(servo1value - 3);
-      delay(80);
+      servo1.write(servo1value - 5);
+      delay(30);
     };
-  }
-  
-  if (abs(leftY) > joyZone) {
-    Serial.print("Left joystick moved: ");
-    servo4goal = map(leftY, -512, 512, 0, 180);
-  } else {
-    servo4goal = neutralpos;
   }
 
   if (abs(servo4value - servo4goal) > error) {
     // increment servo write by like 5 and then delay a millisecond
     if (servo4value < servo4goal) {
       servo4.write(servo4value + 5);
-      delay(10);
+      delay(30);
     };
     if (servo4value > servo4goal) {
       servo4.write(servo4value - 5);
-      delay(10);
+      delay(30);
     };
   };
-
-  if (abs(rightX) > joyZone) {
-    Serial.print("Right joystick moved: ");
-    servo2goal = map(rightX, -512, 512, 0, 180);
-  } else {
-    servo2goal = neutralpos;
-  }
 
   if (abs(servo2value - servo2goal) > error) {
     // increment servo write by like 5 and then delay a millisecond
     if (servo2value < servo2goal) {
       servo2.write(servo2value + 5);
-      delay(10);
+      delay(30);
     };
     if (servo2value > servo2goal) {
       servo2.write(servo2value - 5);
-      delay(10);
+      delay(30);
     };
   };
-
-  if (abs(rightY) > joyZone) {
-    Serial.print("Right joystick moved: ");
-    servo3goal = map(rightY, -512, 512, 0, 180);
-  } else {
-    servo3goal = neutralpos;
-  }
 
   if (abs(servo3value - servo3goal) > error) {
     // increment servo write by like 5 and then delay a millisecond
     if (servo3value < servo3goal) {
       servo3.write(servo3value + 5);
-      delay(10);
+      delay(30);
     };
     if (servo3value > servo3goal) {
       servo3.write(servo3value - 5);
-      delay(10);
+      delay(30);
     };
   };
 
@@ -302,3 +277,5 @@ void loop() {
 // make one joystick move bottom part, other joystick move top part (make them the same direction for both)
 // Servo 1 and the servo CCW to it (to the right of it, servo 4) is bottom part (left joystick)
 // make all four strings move together (add weights/tensions) for each direction to make it smoother
+
+// problem: bottom doesn't go to right side as easily, doesn't move foward/backward (servo 4)
