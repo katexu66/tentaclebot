@@ -127,8 +127,6 @@ void processGamepad(ControllerPtr gamepad) {
   int rightX = gamepad->axisRX();
   int rightY = gamepad->axisRY();
 
-  int error = 10;
-
   int servo1value = servo1.read(); 
   int servo2value = servo2.read();
   int servo3value = servo3.read();
@@ -136,8 +134,11 @@ void processGamepad(ControllerPtr gamepad) {
 
   int servo1goal = map(rightX, -512, 512, 0, 180);
   int servo2goal = map(leftX, -512, 512, 0, 180);
-  int servo3goal = map(leftY, -512, 512, 0, 180);
-  int servo4goal = map(rightY, -512, 512, 0, 180);
+  int servo3goal = map(leftY, -512, 512, 180, 0);
+  int servo4goal = map(rightY, -512, 512, 180, 0);
+
+  int error = 10;
+  int delay_amount = 20;
 
   // use left and right joysticks to control servos
 
@@ -145,11 +146,11 @@ void processGamepad(ControllerPtr gamepad) {
     // increment servo write by small amount and then delay a small amount
     if (servo1value < servo1goal) {
       servo1.write(servo1value + 5);
-      delay(30);
+      delay(delay_amount);
     };
     if (servo1value > servo1goal) {
       servo1.write(servo1value - 5);
-      delay(30);
+      delay(delay_amount);
     };
   }
 
@@ -157,11 +158,11 @@ void processGamepad(ControllerPtr gamepad) {
     // increment servo write by like 5 and then delay a millisecond
     if (servo4value < servo4goal) {
       servo4.write(servo4value + 5);
-      delay(30);
+      delay(delay_amount);
     };
     if (servo4value > servo4goal) {
       servo4.write(servo4value - 5);
-      delay(30);
+      delay(delay_amount);
     };
   };
 
@@ -169,11 +170,11 @@ void processGamepad(ControllerPtr gamepad) {
     // increment servo write by like 5 and then delay a millisecond
     if (servo2value < servo2goal) {
       servo2.write(servo2value + 5);
-      delay(30);
+      delay(delay_amount);
     };
     if (servo2value > servo2goal) {
       servo2.write(servo2value - 5);
-      delay(30);
+      delay(delay_amount);
     };
   };
 
@@ -181,11 +182,11 @@ void processGamepad(ControllerPtr gamepad) {
     // increment servo write by like 5 and then delay a millisecond
     if (servo3value < servo3goal) {
       servo3.write(servo3value + 5);
-      delay(30);
+      delay(delay_amount);
     };
     if (servo3value > servo3goal) {
       servo3.write(servo3value - 5);
-      delay(30);
+      delay(delay_amount);
     };
   };
 
@@ -222,7 +223,7 @@ void processGamepad(ControllerPtr gamepad) {
   // Another way to query the buttons, is by calling buttons()
   char buf[256];
   snprintf(buf, sizeof(buf) - 1, // this is how all the info is printed to serial monitor
-           "idx=%d, dpad: 0x%02x, buttons: 0x%04x, "
+           "dpad: 0x%02x, buttons: 0x%04x, "
            "axis L: %4li, %4li, axis R: %4li, %4li, "
            "brake: %4ld, throttle: %4li "
            //"gyro x:%6d y:%6d z:%6d, accel x:%6d y:%6d z:%6d, "
@@ -270,7 +271,7 @@ void loop() {
 
 }
 
-// put things to control top one on right joystick, put bottom on left joystick
+// top half of tentacle controlled by right joystick, bottom half by left joystick
 // step values? too jerky/sudden right now, make motion smoother --> set servo map as goal, have servo turn slowly towards goal with error and get slower as the error decreases (like PID)
 // neutral pos / straight pos / string tensions
 
