@@ -12,7 +12,7 @@ Servo servo4;
 
 // neutral position for servos; test this -- maybe 0? maybe 90? do we want default to be standing up or to the side? or stay at the last moved place?
 // int neutralpos;
-int neutralpos = 90; // probably need different neutral position for different servos (do!)
+int neutralpos = 90;  // probably need different neutral position for different servos (do!)
 
 // Arduino setup function. Runs in CPU 1
 void setup() {
@@ -35,7 +35,7 @@ void setup() {
     Serial.println("Serial is connected!");
   }
 
-  delay(1000); // test delay for battery
+  delay(1000);  // test delay for battery
 
   String fv = BP32.firmwareVersion();
   Serial.print("Firmware version installed: ");
@@ -64,7 +64,6 @@ void setup() {
   // But it might also fix some connection / re-connection issues.
   BP32.forgetBluetoothKeys();
   Serial.println("Bluetooth keys forgotten.");
-
 }
 
 // This callback gets called any time a new gamepad is connected.
@@ -87,15 +86,15 @@ void onConnectedController(ControllerPtr ctl) {
               "flags: 0x%02x",
               properties.btaddr[0], properties.btaddr[1], properties.btaddr[2],
               properties.btaddr[3], properties.btaddr[4], properties.btaddr[5],
-              properties.vendor_id, properties.product_id, properties.flags); // I think here is where all the data is coming from; test and tweak this so it's only necessary controller things
+              properties.vendor_id, properties.product_id, properties.flags);  // I think here is where all the data is coming from; test and tweak this so it's only necessary controller things
       Serial.println(buf);
       break;
     }
   }
-  
+
   if (!foundEmptySlot) {
     Serial.println(
-        "CALLBACK: Controller connected, but could not found empty slot");
+      "CALLBACK: Controller connected, but could not found empty slot");
   }
 }
 
@@ -115,80 +114,31 @@ void onDisconnectedController(ControllerPtr ctl) {
 
   if (!foundGamepad) {
     Serial.println(
-        "CALLBACK: Controller disconnected, but not found in myControllers");
+      "CALLBACK: Controller disconnected, but not found in myControllers");
   }
 }
 
 void processGamepad(ControllerPtr gamepad) {
-
-  // variables for servo control using controllers
+  // Read joystick inputs
   int leftX = gamepad->axisX();
   int leftY = gamepad->axisY();
   int rightX = gamepad->axisRX();
   int rightY = gamepad->axisRY();
 
-  int servo1value = servo1.read(); 
-  int servo2value = servo2.read();
-  int servo3value = servo3.read();
-  int servo4value = servo4.read();
+  int error = 3;     // Reduce error threshold for smoother movement
+  int stepSize = 3;  // Smaller step size for gradual movement
 
-  int servo1goal = map(rightX, -512, 512, 0, 180);
-  int servo2goal = map(leftX, -512, 512, 0, 180);
-  int servo3goal = map(leftY, -512, 512, 180, 0);
-  int servo4goal = map(rightY, -512, 512, 180, 0);
+  // Map joystick values to servo goals
+  int servo1goal = map(leftX, -512, 512, 0, 180);
+  int servo2goal = map(rightX, -512, 512, 0, 180);
+  int servo3goal = map(rightY, -512, 512, 0, 180);
+  int servo4goal = map(leftY, -512, 512, 0, 180);
 
-  int error = 10;
-  int delay_amount = 20;
-
-  // use left and right joysticks to control servos
-
-  if (abs(servo1value - servo1goal) > error) {
-    // increment servo write by small amount and then delay a small amount
-    if (servo1value < servo1goal) {
-      servo1.write(servo1value + 5);
-      delay(delay_amount);
-    };
-    if (servo1value > servo1goal) {
-      servo1.write(servo1value - 5);
-      delay(delay_amount);
-    };
-  }
-
-  if (abs(servo4value - servo4goal) > error) {
-    // increment servo write by like 5 and then delay a millisecond
-    if (servo4value < servo4goal) {
-      servo4.write(servo4value + 5);
-      delay(delay_amount);
-    };
-    if (servo4value > servo4goal) {
-      servo4.write(servo4value - 5);
-      delay(delay_amount);
-    };
-  };
-
-  if (abs(servo2value - servo2goal) > error) {
-    // increment servo write by like 5 and then delay a millisecond
-    if (servo2value < servo2goal) {
-      servo2.write(servo2value + 5);
-      delay(delay_amount);
-    };
-    if (servo2value > servo2goal) {
-      servo2.write(servo2value - 5);
-      delay(delay_amount);
-    };
-  };
-
-  if (abs(servo3value - servo3goal) > error) {
-    // increment servo write by like 5 and then delay a millisecond
-    if (servo3value < servo3goal) {
-      servo3.write(servo3value + 5);
-      delay(delay_amount);
-    };
-    if (servo3value > servo3goal) {
-      servo3.write(servo3value - 5);
-      delay(delay_amount);
-    };
-  };
+  // Gradually move servos toward their goals
+  moveServoSmoothly(servo1, servo1goal, stepSize, error);
+  moveServoSmoothly(servo2, servo2goal, stepSize, error);
+  moveServoSmoothly(servo3, servo3goal, stepSize, error);
+  moveServoSmoothly(servo4, servo4goal, stepSize, error);
 
   // There are different ways to query whether a button is pressed.
   // By query each button individually: a(), b(), x(), y(), l1(), etc...
@@ -222,43 +172,49 @@ void processGamepad(ControllerPtr gamepad) {
 
   // Another way to query the buttons, is by calling buttons()
   char buf[256];
-  snprintf(buf, sizeof(buf) - 1, // this is how all the info is printed to serial monitor
-           "dpad: 0x%02x, buttons: 0x%04x, "
+  snprintf(buf, sizeof(buf) - 1,  // this is how all the info is printed to serial monitor
+           "idx=%d, dpad: 0x%02x, buttons: 0x%04x, "
            "axis L: %4li, %4li, axis R: %4li, %4li, "
            "brake: %4ld, throttle: %4li "
            //"gyro x:%6d y:%6d z:%6d, accel x:%6d y:%6d z:%6d, "
            "battery: %d",
-           gamepad->index(),        // Gamepad Index
-           gamepad->dpad(),         // DPad
-           gamepad->buttons(),      // bitmask of pressed buttons
-           gamepad->axisX(),        // (-511 - 512) left X Axis
-           gamepad->axisY(),        // (-511 - 512) left Y axis
-           gamepad->axisRX(),       // (-511 - 512) right X axis
-           gamepad->axisRY(),       // (-511 - 512) right Y axis
-           gamepad->brake(),        // (0 - 1023): brake button
-           gamepad->throttle(),     // (0 - 1023): throttle (AKA gas) button
+           gamepad->index(),     // Gamepad Index
+           gamepad->dpad(),      // DPad
+           gamepad->buttons(),   // bitmask of pressed buttons
+           gamepad->axisX(),     // (-511 - 512) left X Axis
+           gamepad->axisY(),     // (-511 - 512) left Y axis
+           gamepad->axisRX(),    // (-511 - 512) right X axis
+           gamepad->axisRY(),    // (-511 - 512) right Y axis
+           gamepad->brake(),     // (0 - 1023): brake button
+           gamepad->throttle(),  // (0 - 1023): throttle (AKA gas) button
            //gamepad->gyroX(),        // Gyro X
            //gamepad->gyroY(),        // Gyro Y
            //gamepad->gyroZ(),        // Gyro Z
            //gamepad->accelX(),       // Accelerometer X
            //gamepad->accelY(),       // Accelerometer Y
            //gamepad->accelZ(),       // Accelerometer Z
-           gamepad->battery()       // 0=Unknown, 1=empty, 255=full
+           gamepad->battery()  // 0=Unknown, 1=empty, 255=full
   );
   Serial.println(buf);
 
   // You can query the axis and other properties as well. See Controller.h For all the available functions.
 }
 
+// Function to gradually move servos toward their target positions
+void moveServoSmoothly(Servo& servo, int goal, int stepSize, int error) {
+  int currentPos = servo.read();
+
+  if (abs(currentPos - goal) > error) {  // Move only if error is significant
+    int newPos = currentPos + (goal > currentPos ? stepSize : -stepSize);
+    newPos = constrain(newPos, 0, 180);  // Keep within valid servo range
+    servo.write(newPos);
+  }
+}
+
 // Arduino loop function. Runs in CPU 1
 void loop() {
-  // This call fetches all the controller info from the NINA (ESP32) module.
-  // Call this function in your main loop.
-  // The controllers' pointer (the ones received in the callbacks) gets updated automatically.
   BP32.update();
 
-  // It is safe to always do this before using the controller API.
-  // This guarantees that the controller is valid and connected.
   for (int i = 0; i < BP32_MAX_CONTROLLERS; i++) {
     ControllerPtr myController = myControllers[i];
 
@@ -267,16 +223,14 @@ void loop() {
         processGamepad(myController);
     }
   }
-  delay(10); // original was 150
 
+  delay(5);  // Reduce delay to improve responsiveness
 }
 
-// top half of tentacle controlled by right joystick, bottom half by left joystick
+// put things to control top one on right joystick, put bottom on left joystick
 // step values? too jerky/sudden right now, make motion smoother --> set servo map as goal, have servo turn slowly towards goal with error and get slower as the error decreases (like PID)
 // neutral pos / straight pos / string tensions
 
 // make one joystick move bottom part, other joystick move top part (make them the same direction for both)
 // Servo 1 and the servo CCW to it (to the right of it, servo 4) is bottom part (left joystick)
 // make all four strings move together (add weights/tensions) for each direction to make it smoother
-
-// problem: bottom doesn't go to right side as easily, doesn't move foward/backward (servo 4)
