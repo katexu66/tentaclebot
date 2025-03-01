@@ -128,7 +128,7 @@ void processGamepad(ControllerPtr gamepad) {
   int error = 3;     // Reduce error threshold for smoother movement
   int stepSize = 3;  // Smaller step size for gradual movement
 
-  // Map joystick values to servo goals
+  // Map joystick values to servo goals; Top half of tentacle is controlled by right joystick, bottom half by left joystick
   int servo1goal = map(rightX, -512, 512, 0, 180);
   int servo2goal = map(0.9*leftX, -512, 512, 0, 180); // to try to make servo2 less fast
   int servo3goal = map(leftY, -512, 512, 0, 180);
@@ -205,7 +205,7 @@ void moveServoSmoothly(Servo& servo, int goal, int stepSize, int error) {
   int currentPos = servo.read();
 
   if (abs(currentPos - goal) > error) {  // Move only if error is significant
-    int newPos = currentPos + (goal > currentPos ? stepSize : -stepSize);
+    int newPos = currentPos + (goal > currentPos ? stepSize : -stepSize); // Add stepsize if over, subtract if under
     newPos = constrain(newPos, 0, 180);  // Keep within valid servo range
     servo.write(newPos);
   }
@@ -224,10 +224,9 @@ void loop() {
     }
   }
 
-  delay(5);  // Reduce delay to improve responsiveness
+  delay(5);  // Reduce delay to make it faster/more responsive
 }
 
-// put things to control top one on right joystick, put bottom on left joystick
 // step values? too jerky/sudden right now, make motion smoother --> set servo map as goal, have servo turn slowly towards goal with error and get slower as the error decreases (like PID)
 // neutral pos / straight pos / string tensions
 
