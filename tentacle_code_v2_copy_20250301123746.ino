@@ -25,7 +25,7 @@ void setup() {
   servo4.attach(8);
 
   servo1.write(neutralpos);
-  servo2.write(neutralpos);
+  servo2.write(150); // I think this makes it better? servo2 is the very extreme one
   servo3.write(neutralpos);
   servo4.write(neutralpos);
 
@@ -130,7 +130,7 @@ void processGamepad(ControllerPtr gamepad) {
 
   // Map joystick values to servo goals
   int servo1goal = map(rightX, -512, 512, 0, 180);
-  int servo2goal = map(leftX, -512, 512, 0, 180);
+  int servo2goal = map(0.9*leftX, -512, 512, 0, 180); // to try to make servo2 less fast
   int servo3goal = map(leftY, -512, 512, 0, 180);
   int servo4goal = map(rightY, -512, 512, 0, 180);
 
