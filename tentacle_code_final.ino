@@ -21,8 +21,8 @@ void setup() {
 
   servo1.attach(5);
   servo2.attach(6);
-  servo3.attach(7);
-  servo4.attach(8);
+  servo3.attach(8);
+  servo4.attach(7);
 
   servo1.write(neutralpos);
   servo2.write(150); // I think this makes it better? servo2 is the very extreme one
